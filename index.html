@@ -1,0 +1,31 @@
+<html>
+<head>
+<title>Planet Hopper</title>
+</head>
+<body>
+
+
+<script src="lib/api.js"></script>
+<script src="src/game.js"></script>
+<script src="src/viewer.js"></script>
+<script src="src/control.js"></script>
+
+<script>
+
+
+
+
+Viewer.attach();
+
+var thread = function(){
+    setTimeout(thread, 33);
+    Game.step();
+	Viewer.render();
+};
+thread();
+
+</script>
+
+
+</body>
+</html>
