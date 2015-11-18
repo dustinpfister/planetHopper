@@ -108,6 +108,7 @@ var Viewer = (function(){
 			context.fillText('best AI: ' + Game.stats.best,15,15);
 			context.fillText('weakest player: ' + Game.stats.weakest,15,25);
 			context.fillText('total force: ' + Game.stats.totalForce,15,35);
+			context.fillText('target indexs: ' + Game.stats.targets,15,45);
 			
 		},
 		
