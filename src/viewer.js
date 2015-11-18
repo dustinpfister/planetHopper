@@ -102,6 +102,13 @@ var Viewer = (function(){
 			renderOreCounts();
 			renderAttackLines(context);
 			
+			context.fillStyle='#ffffff';
+			context.textAlign = 'left';
+			context.font = '10px arial';
+			context.fillText('best AI: ' + Game.stats.best,15,15);
+			context.fillText('weakest player: ' + Game.stats.weakest,15,25);
+			context.fillText('total force: ' + Game.stats.totalForce,15,35);
+			
 		},
 		
 		getCanvas : function(){

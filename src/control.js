@@ -82,7 +82,6 @@
 					
 				    if( api.distance(pos.x,pos.y,planets[p].x, planets[p].y) <= planets[p].radius ){
 					
-					    console.log('okay but only once');
 						user.selected.push(p);
 					
 				    }
@@ -97,31 +96,8 @@
 	
 	canvas.addEventListener('mouseup', function(e){
 		
-		var p, pLen;
 		
-		if(user.selected.length >= 1){
-			
-			p = 0; pLen = planets.length;
-			while(p < pLen){
-				
-				if( api.distance(user.x,user.y,planets[p].x, planets[p].y) <= planets[p].radius ){
-				
-				    if(planets[p].owner === 'p'){
-				
-				        console.log('hey buddy!');
-				    
-				
-				    }else{
-						
-						console.log('west side!');
-						
-					}
-					
-				}
-				
-				p++;
-			}
-		}
+		Game.playerAttack();
 		
 		
 		user.down = false;
