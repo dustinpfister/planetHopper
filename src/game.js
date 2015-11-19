@@ -17,19 +17,19 @@ var Game = (function () {
 
 	stageData = [{ // stage 0
 			factions : 'p,e,n'.split(','), // the faction id's
-			ai : 'p,e1,n1', // the faction AI settings
-			defaultFaction : 'n',
+			//ai : 'p,e1,n1', // the faction AI settings
+			//defaultFaction : 'n',
 
 			planetData : [
 			    {id : '1',x : 80,y : 400,owner : 'p',size : 0,upgrades : {economy : 4}}, 
 				{id : '2',x : 550,y : 50,owner : 'e',size : 1,upgrades : {economy : 1}}, 
-				{id : '3',x : 110,y : 80,size : 1,upgrades : {economy : 0}},
+				{id : '3',x : 110,y : 80,owner : 'p',size : 1,upgrades : {economy : 0}},
 				{id : '4',x : 220,y : 80,owner : 'p'}, 
 				{id : '5',x : 110,y : 190, owner : 'p'},
 				
-				{id : '6',x : 550,y : 400,size : 1,upgrades : {economy : 0}},
-				{id : '7',x : 500,y : 320}, 
-				{id : '8',x : 450,y : 400},
+				{id : '6',x : 550,y : 400,owner : 'p',size : 1,upgrades : {economy : 0}},
+				{id : '7',x : 500,y : 320,owner : 'p'}, 
+				{id : '8',x : 450,y : 400,owner : 'p'},
 
 			]
 
@@ -39,32 +39,34 @@ var Game = (function () {
 			ai : 'p,e1,n1', // the faction AI settings
 			defaultFaction : 'n',
 
-			planetData : [{
-					id : '1',
-					x : 80,
-					y : 400,
-					owner : 'p',
-					size : 0
-				}, {
-					id : '2',
-					x : 180,
-					y : 350,
-					owner : 'n',
-					size : 0
-				}, {
-					id : '3',
-					x : 80,
-					y : 300,
-					owner : 'n',
-					size : 0
-				},
-				{
-					id : '4',
-					x : 580,
-					y : 50,
-					owner : 'e',
-					size : 0
-				},
+			planetData : [
+			
+			    {id:'1',x:80,y:400,owner:'p',size:0},
+				{id:'2',x:180,y:350,owner:'n',size:0},
+				{id:'3',x:80,y:300,owner:'n',size:0},
+				
+				{id:'4',x:280,y:400,owner:'n',size:0},
+				{id:'5',x:380,y:350,owner:'n',size:0},
+				{id:'6',x:280,y:300,owner:'n',size:0},
+				
+				{id:'7',x:480,y:400,owner:'n',size:0},
+				{id:'8',x:580,y:350,owner:'n',size:0},
+				{id:'9',x:480,y:300,owner:'n',size:0},
+				
+				
+				{id:'10',x:80,y:200,owner:'n',size:0},
+				{id:'11',x:180,y:150,owner:'n',size:0},
+				{id:'12',x:80,y:100,owner:'n',size:0},
+				
+				{id:'13',x:280,y:200,owner:'n',size:0},
+				{id:'14',x:380,y:150,owner:'n',size:0},
+				{id:'15',x:280,y:100,owner:'n',size:0},
+				
+				{id:'16',x:480,y:200,owner:'n',size:0},
+				{id:'17',x:580,y:150,owner:'n',size:0},
+				{id:'18',x:480,y:100,owner:'n',size:0},
+				
+				{id:'19',x:580,y:50,owner:'e',size:0}
 
 			]
 
@@ -74,16 +76,18 @@ var Game = (function () {
 	
 	AI = {
 		
-		best : {
-			
+		best : { // the ai's best planet
 			index: 0,
 			ore:0
 			
 		},
-		weakest:{},
-		targets: [],
+		weakest:{},    // the players weakest planet
+		targets: [],   // the planets that the ai can attack
 		breakDown: {}, // how many planets each faction controls
 		totalForce:0,
+		
+		lastAction: new Date(), // the last time the ai made and attack or upgrade
+		actionRate: 1000,
 		
 		// what the AI is to do on each frame tick
 		step : function(){
@@ -95,21 +99,62 @@ var Game = (function () {
 			// find best AI planet, and weakest non-AI planet
 			this.findBest();
 			this.findWeakest();
+			this.setAggression();
 			
-			// attack!?
-			//this.attackWeakestWithBest();
-			if(this.targets.length > 0){
+			
+			this.takeAction();
+			
+		},
+		
+		takeAction : function(){
+			
+			var roll, attackChance;
+			
+			// set actionRate based on aggresion
+			this.actionRate = 10000 - 10000 * ((this.aggression + 1)/2);
+			
+			// if enough time has passed sense last action the ai might do something
+			if(new Date() - this.lastAction >= this.actionRate){
+			
+			    // attack, upgrade, or do nothing
+				
+			    // if there is one or more targets then the ai can attack
+			    if(this.targets.length > 0){
+		
+		            // however just because the AI can attack does not mean that it will attack, chance of attack depends on aggression
+		            attackChance = ((this.aggression + 1)/2);
+					roll = Math.random();
+					
+                    // if aggression is greather than 0
+				    //if(this.aggression > 0){
+			        if(roll < attackChance){
+				   
+				        var plIndex = this.targets[Math.floor(Math.random()* this.targets.length)];
+			            this.allOutAttack(plIndex);
 			   
-			   // agression based on how many planets the player has
-			   if(this.breakDown['p'] > this.breakDown['e']){
-			       
-				   var plIndex = this.targets[Math.floor(Math.random()* this.targets.length)];
-			       this.allOutAttack(plIndex);
-			   
-			   }
+				    }else{
+					
+					    // focus more on upgrading if even number of planets or if the ai is winning
+					
+					
+				    }
+			
+			    }
+				
+				this.lastAction = new Date();
 			
 			}
 			
+		},
+		
+		// set aggression based on number of planets the player has
+		setAggression : function(){
+			
+			var total = this.breakDown['e'] + this.breakDown['p'],
+			playerPer =  this.breakDown['p'] / total,
+			aiPer = this.breakDown['e'] / total;
+			
+			this.aggression = playerPer - aiPer; 
 		},
 		
 		// find a bunch of planets that the AI could take over
@@ -118,7 +163,7 @@ var Game = (function () {
 			var p=0, pLen = planets.length;
 			
 			this.targets = [];
-			this.breakDown = {};
+			this.breakDown = {n:0,p:0,e:0};
 			
 			while(p < pLen){
 						
@@ -410,7 +455,7 @@ var Game = (function () {
 		
 	};
 
-	setUpStage(0);
+	setUpStage(1);
 
 	return {
 		planets : planets,
