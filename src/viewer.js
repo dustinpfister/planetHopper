@@ -1,7 +1,7 @@
 var Viewer = (function(){
     var canvas = document.createElement('canvas'),
 	context = canvas.getContext('2d'),
-	user = Game.getUser(),
+	user = Game.user,
 	planets = Game.planets;
 	
 	canvas.width=640;
@@ -105,10 +105,6 @@ var Viewer = (function(){
 			context.fillStyle='#ffffff';
 			context.textAlign = 'left';
 			context.font = '10px arial';
-			context.fillText('best AI: ' + Game.stats.best,15,15);
-			context.fillText('weakest player: ' + Game.stats.weakest,15,25);
-			context.fillText('total force: ' + Game.stats.totalForce,15,35);
-			context.fillText('target indexs: ' + Game.stats.targets,15,45);
 			
 		},
 		

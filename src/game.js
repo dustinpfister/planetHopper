@@ -1,7 +1,6 @@
 var Game = (function () {
 
 	var planets = [],
-	stats = {},
 	user = {
 
 		down : false,
@@ -10,7 +9,43 @@ var Game = (function () {
 		x : 0,
 		y : 0,
 		percent: 0.75, // attack with % of ore
-		selected : []
+		selected : [],
+		
+		// is the given planet id in user.selected?
+		isSelected : function(id){
+			
+			var i=0, len = this.selected.length;
+			while(i < len){
+				
+				if(planets[this.selected[i]].id === id){
+					
+					return true;
+					
+				}
+				
+				i++;
+			}
+			
+			return false;
+			
+		},
+		
+		removeById : function(id){
+			
+			var i=0, len = this.selected.length;
+			while(i < len){
+				
+				if(planets[this.selected[i]].id === id){
+					
+					this.selected.splice(i,1);
+					break;
+					
+				}
+				
+				i++;
+			}
+			
+		}
 
 	},
 	ai, // the current AI class instance
@@ -77,23 +112,26 @@ var Game = (function () {
 	AI = {
 		
 		best : { // the ai's best planet
+		
 			index: 0,
 			ore:0
 			
 		},
+		
 		weakest:{},    // the players weakest planet
 		targets: [],   // the planets that the ai can attack
 		breakDown: {}, // how many planets each faction controls
-		totalForce:0,
-		
+		totalForce:0,		
 		lastAction: new Date(), // the last time the ai made and attack or upgrade
 		actionRate: 1000,
+		aggression: 1,
 		
 		// what the AI is to do on each frame tick
 		step : function(){
 			
 			// make sure that total force is updated
-			this.findTotalForce();
+			this.totalForce = this.findTotalForce('e');
+			
 			this.findTargets();
 			
 			// find best AI planet, and weakest non-AI planet
@@ -122,12 +160,12 @@ var Game = (function () {
 			    if(this.targets.length > 0){
 		
 		            // however just because the AI can attack does not mean that it will attack, chance of attack depends on aggression
-		            attackChance = ((this.aggression + 1)/2);
+		            //attackChance = ((this.aggression + 1)/2);
 					roll = Math.random();
 					
                     // if aggression is greather than 0
 				    //if(this.aggression > 0){
-			        if(roll < attackChance){
+			        if(roll < this.aggression){
 				   
 				        var plIndex = this.targets[Math.floor(Math.random()* this.targets.length)];
 			            this.allOutAttack(plIndex);
@@ -150,11 +188,15 @@ var Game = (function () {
 		// set aggression based on number of planets the player has
 		setAggression : function(){
 			
-			var total = this.breakDown['e'] + this.breakDown['p'],
-			playerPer =  this.breakDown['p'] / total,
-			aiPer = this.breakDown['e'] / total;
+			var oreAggression = this.findTotalForce('e') / (this.findTotalForce('e') + this.findTotalForce('p')),
 			
-			this.aggression = playerPer - aiPer; 
+			planetAggression = this.breakDown['p'] / (this.breakDown['e'] + this.breakDown['p']);
+			
+			// aggression based on ai ore
+			this.aggression = planetAggression * 0.7 + oreAggression * 0.3;
+			
+			console.log(this.aggression);
+			
 		},
 		
 		// find a bunch of planets that the AI could take over
@@ -182,24 +224,23 @@ var Game = (function () {
 				p++;
 			}
 			
-			//console.log(this.breakDown);
-			stats.targets = this.targets;
-			
 		},
 		
-		// find the total ore value of all planets under AI control
-		findTotalForce : function(){
+		// find the total ore value of all planets under AI control or the given faction
+		findTotalForce : function(faction){
 			
-			var p =0, pLen = planets.length;
+			var p =0, pLen = planets.length, totalForce = 0;;
 			
-			this.totalForce = 0;
+			faction = faction === undefined ? 'e' : faction;
+			
+			//this.totalForce = 0;
 			
 			// find total force
 			while(p < pLen){
 				
-				if(planets[p].owner === 'e'){
+				if(planets[p].owner === faction){
 					
-					this.totalForce += planets[p].ore.current;
+					totalForce += planets[p].ore.current;
 					
 				}
 				
@@ -207,7 +248,9 @@ var Game = (function () {
 				p++;
 			}
 			
-			stats.totalForce = this.totalForce;
+			return totalForce;
+			
+			
 			
 		},
 		
@@ -239,8 +282,6 @@ var Game = (function () {
 			}
 			
 			
-			stats.best = this.best.ore;
-			
 		},
 		
 		// find weakest AI planet
@@ -268,8 +309,6 @@ var Game = (function () {
 				p++;
 			}
 			
-			stats.weakest = this.weakest.ore;
-			
 		},
 		
 		attackWeakestWithBest : function(){
@@ -294,12 +333,14 @@ var Game = (function () {
 			
 		},
 		
-		allOutAttack : function(plIndex){
+		allOutAttack : function(targetIndex){
 			
 			var p = 0, pLen = planets.length,
-			targetPl = plIndex === undefined ? planets[this.weakest.index] : planets[plIndex];
+			targetPl;
+
+			targetIndex = targetIndex === undefined ? this.weakest.index : targetIndex;
 			
-			
+			targetPl = planets[targetIndex];
 			
 			// if total force > weakest launch all out attack
 			if(this.totalForce > this.weakest.ore){
@@ -320,7 +361,14 @@ var Game = (function () {
 				targetPl.ore.current -= this.totalForce;
 				if(targetPl.ore.current <=0){
 					
+					if(user.isSelected(targetPl.id)){
+						
+						user.removeById(targetPl.id);
+						
+					}
+					
 					targetPl.owner = 'e';
+					
 				}
 				targetPl.ore.current = Math.abs(targetPl.ore.current);
 			}
@@ -459,10 +507,8 @@ var Game = (function () {
 
 	return {
 		planets : planets,
-		stats : stats,
-		getUser : function () {
-			return user;
-		},
+        user : user,
+		
 		step : function () {
 			
 			var pi = 0,
@@ -480,7 +526,9 @@ var Game = (function () {
 			
 		},
 		setStage : function (stageNumber) {
+			
 			setUpStage(stageNumber);
+			
 		},
 
 		playerAttack : function (targetIndex) {
@@ -535,8 +583,6 @@ var Game = (function () {
 
 									targetPlanet.ore.current -= Math.floor(planet.ore.current * user.percent);
 									planet.ore.current -= Math.floor(planet.ore.current * user.percent);
-
-									
 
 								}
 								

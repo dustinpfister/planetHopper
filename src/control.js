@@ -2,7 +2,7 @@
 	
 	var canvas = Viewer.getCanvas(),
 	planets = Game.planets,
-	user = Game.getUser(),
+	user = Game.user,
 	
 	getMousePos = function(e){
 		
